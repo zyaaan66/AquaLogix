@@ -1,0 +1,131 @@
+// AquaLogix — Prisma schema
+// Dev uses SQLite; switch provider to "postgresql" + DATABASE_URL for production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// NOTE: SQLite (used for dev via `provider = "sqlite"`) does not support native
+// Prisma enums, so RoleName is stored as a plain String here and validated in
+// application code via the `RoleName` TypeScript union in src/lib/auth.ts.
+// If you switch `provider` to "postgresql" for production, you can restore a
+// real `enum RoleName { ADMIN OPERATIONS_MANAGER ANALYST PARTNER }` and change
+// the `name` field type back to `RoleName` for stronger DB-level guarantees.
+
+enum RoleName {
+  ADMIN
+  OPERATIONS_MANAGER
+  ANALYST
+  PARTNER
+}
+
+model Role {
+  id    String   @id @default(cuid())
+  name  RoleName @unique
+  users User[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @relation(fields: [roleId], references: [id])
+  roleId       String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  documents Document[]
+  auditLogs AuditLog[]
+}
+
+model Province {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  shipments Shipment[]
+}
+
+model Vendor {
+  id          String   @id @default(cuid())
+  name        String
+  onTimeRate  Float    @default(0)
+  contact     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  shipments Shipment[]
+}
+
+model Commodity {
+  id        String      @id @default(cuid())
+  name      String
+  unit      String      @default("kg")
+  inventory Inventory[]
+}
+
+model Inventory {
+  id           String    @id @default(cuid())
+  commodity    Commodity @relation(fields: [commodityId], references: [id])
+  commodityId  String
+  stockTon     Float
+  reorderPoint Float
+  updatedAt    DateTime  @updatedAt
+}
+
+model Shipment {
+  id          String    @id @default(cuid())
+  vendor      Vendor    @relation(fields: [vendorId], references: [id])
+  vendorId    String
+  province    Province  @relation(fields: [provinceId], references: [id])
+  provinceId  String
+  status      String    // "ontime" | "late" | "in_transit" | "delivered"
+  delayHours  Int?
+  shippedAt   DateTime
+  deliveredAt DateTime?
+}
+
+model FuelCost {
+  id            String   @id @default(cuid())
+  date          DateTime
+  pricePerLiter Float
+}
+
+model PredictionHistory {
+  id             String   @id @default(cuid())
+  status         String
+  summary        String
+  priorityScore  Int
+  riskLevel      String
+  recommendation String   // JSON-encoded string[]
+  prediction     String
+  confidence     Int
+  createdAt      DateTime @default(now())
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  owner        User     @relation(fields: [ownerId], references: [id])
+  ownerId      String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  encryptedRef String   // reference/path to the encrypted-at-rest blob
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     User?    @relation(fields: [actorId], references: [id])
+  actorId   String?
+  action    String
+  metadata  String? // JSON-encoded context
+  ipAddress String?
+  createdAt DateTime @default(now())
+}

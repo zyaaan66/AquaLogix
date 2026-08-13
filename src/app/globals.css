@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 42%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 199 89% 48%;
+  }
+
+  .dark {
+    /* Dark Premium — the product's default surface */
+    --background: 222 47% 7%;
+    --foreground: 210 40% 98%;
+    --card: 222 45% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 45% 9%;
+    --popover-foreground: 210 40% 98%;
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 20% 65%;
+    --border: 222 25% 18%;
+    --input: 222 25% 18%;
+    --ring: 199 89% 48%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    font-feature-settings: "cv11", "ss01", "tnum";
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  ::selection {
+    @apply bg-accent/30;
+  }
+}
+
+@layer components {
+  /* Signature element: thin glass card with a faint "depth" gradient at the top,
+     evoking sunlight fading into deep water. Used across KPI, briefing, and chart cards. */
+  .glass-card {
+    @apply relative rounded-lg border border-white/10 bg-card/60 backdrop-blur-xl shadow-card;
+  }
+  .glass-card::before {
+    content: "";
+    @apply absolute inset-0 rounded-lg bg-depth-gradient pointer-events-none;
+  }
+
+  .gradient-border {
+    position: relative;
+    border-radius: 16px;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(14,165,233,0.6), rgba(14,165,233,0) 60%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 20%,
+      hsl(var(--muted)) 40%
+    );
+    background-size: 700px 100%;
+    @apply animate-shimmer;
+  }
+}
